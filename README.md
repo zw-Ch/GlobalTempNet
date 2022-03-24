@@ -21,7 +21,6 @@ The folder [result](https://github.com/czw1296924847/SAGE-RNN/tree/main/result/)
 ## Parameter Selection
 Program [rnn_gnn_machine.py](https://github.com/czw1296924847/SAGE-RNN/blob/main/rnn_gnn_machine.py) contains many parameters that can be changed, such as<br>
 `gnn_style`: The type of GNN model style<br>
-`gnn_style_all`: All the GNN model you can choose, where 'sage_lstm' and 'sage_gru' are the models that we have proposed, and others are the models based on traditional GNN layers<br>
+`gnn_style_all`: All the GNN model you can choose, where 'sage_res' as the model ResGraphNet that we have proposed in our paper, and others are the models based on traditional GNN layers<br>
 `epochs`: The number of iteration rounds<br>
-`style`: The type of RNN model, you can choose 'LSTM' or 'GRU'<br>
 
