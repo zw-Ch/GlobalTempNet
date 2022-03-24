@@ -22,5 +22,3 @@ The folder [result](https://github.com/czw1296924847/ResGraphNet/tree/main/resul
 Program [rnn_gnn_machine.py](https://github.com/czw1296924847/ResGraphNet/blob/main/rnn_gnn_machine.py) contains many parameters that can be changed, such as<br>
 `gnn_style`: The type of GNN model style<br>
 `gnn_style_all`: All the GNN model you can choose, where 'sage_res' as the model ResGraphNet that we have proposed in our paper, and others are the models based on traditional GNN layers<br>
-`epochs`: The number of iteration rounds<br>
-
