@@ -276,39 +276,4 @@ if save_fig:
 print("ResNet:  RMSE_Train: {:.5f}  RMSE_Test: {:.5f}  R2_Train: {:.6f}  R2_Test: {:.6f}".
       format(rmse_train_res, rmse_test_res, r2_train_res, r2_test_res))
 
-
-# 将各个模型输出结果，追加写入文件
-if save_txt:
-    info_txt_address = osp.join(result_address, "../result.txt")  # 保存参数信息的txt文件地址
-    info_df_address = osp.join(result_address, "../result.csv")  # 保存参数信息的csv文件地址
-    f = open(info_txt_address, 'a')
-    if osp.getsize(info_txt_address) == 0:          # 若此前未曾运行，在文本第一行加入各个特征的名称
-        f.write("ts_name gnn_style r2_test_gnn r2_test_res r2_test_forest r2_test_linear r2_test_svr r2_test_sgd "
-                "hidden_dim batch_size num_layers epochs_gnn lr_gnn epochs_res lr_res\n")
-    f.write(str(ts_name) + "\t")
-    f.write(str(gnn_style) + "\t")
-    f.write(str(r2_test_gnn) + "\t")
-    f.write(str(r2_test_res) + "\t")
-    f.write(str(r2_test_forest) + "\t")
-    f.write(str(r2_test_linear) + "\t")
-    f.write(str(r2_test_svr) + "\t")
-    f.write(str(r2_test_sgd) + "\t")
-    f.write(str(hidden_dim) + "\t")
-    f.write(str(batch_size) + "\t")
-    f.write(str(num_layers) + "\t")
-    f.write(str(epochs_gnn) + "\t")
-    f.write(str(lr_gnn) + "\t")
-    f.write(str(epochs_res) + "\t")
-    f.write(str(lr_res) + "\t")
-
-    f.write("\n")                           # 准备下一次运行
-    f.close()                               # 关闭文件
-
-    # 保存为dataframe格式
-    info = np.loadtxt(info_txt_address, dtype=str)
-    columns = info[0, :].tolist()           # 特征的名称，作为列的名称
-    values = info[1:, :]                    # 特征的取值
-    info_df = pd.DataFrame(values, columns=columns)
-    info_df.to_csv(info_df_address)
-
 plt.show()
