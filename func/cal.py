@@ -10,26 +10,37 @@ from torch.utils.data import Dataset
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
-def eval_on_features(regress, x_train, y_train, x_test, y_test, title, fig_size=(12, 8), alpha=0.5):
+def eval_on_features(regress, x_train, y_train, x_test, y_test, title, iv, way, fig_size=(12, 8), alpha=0.5):
     num_train, num_test = x_train.shape[0], x_test.shape[0]
     num = num_train + num_test
-    regress.fit(x_train, y_train.reshape(-1))
-    y_train_pred = regress.predict(x_train)
-    y_test_pred = regress.predict(x_test)
+    y_length = y_train.shape[1]
+    for i in range(y_length):
+        y_train_one = y_train[:, i]
+        regress.fit(x_train, y_train_one)
+        y_train_pred_one = regress.predict(x_train).reshape(-1, 1)
+        y_test_pred_one = regress.predict(x_test).reshape(-1, 1)
+        if i == 0:
+            y_train_pred = y_train_pred_one
+            y_test_pred = y_test_pred_one
+        else:
+            y_train_pred = np.concatenate((y_train_pred, y_train_pred_one), axis=1)
+            y_test_pred = np.concatenate((y_test_pred, y_test_pred_one), axis=1)
 
-    rmse_train = get_rmse(a1=y_train, a2=y_train_pred)
-    rmse_test = get_rmse(a1=y_test, a2=y_test_pred)
+    rmse_train = get_rmse(y_train_pred, y_train)
+    rmse_test = get_rmse(y_test_pred, y_test)
     r2_train = get_r2_score(y_train_pred, y_train)
     r2_test = get_r2_score(y_test_pred, y_test)
 
     plt.figure(figsize=fig_size)
     # plt.title(title, fontsize=30)
-    range_train = np.arange(num_train)
-    range_test = np.arange(num_train, num)
-    plt.plot(range_train, y_train, label="$y^{train}$", alpha=alpha)
-    plt.plot(range_train, y_train_pred, label="$\hat{y}^{train}$", alpha=alpha)
-    plt.plot(range_test, y_test, label="$y^{test}$", alpha=alpha)
-    plt.plot(range_test, y_test_pred, label="$\hat{y}^{test}$", alpha=alpha)
+    length_train = y_train_pred[:, 0].shape[0]
+    length_test = y_test_pred[:, 0].shape[0]
+    lim_train = np.arange(length_train // iv)
+    lim_test = np.arange(length_train // iv, length_train // iv + length_test // iv)
+    plt.plot(lim_train, sam(y_train[:, 0], iv, way), label="$y^{train}$", alpha=alpha)
+    plt.plot(lim_train, sam(y_train_pred[:, 0], iv, way), label="$\hat{y}^{train}$", alpha=alpha)
+    plt.plot(lim_test, sam(y_test[:, 0], iv, way), label="$y^{test}$", alpha=alpha)
+    plt.plot(lim_test, sam(y_test_pred[:, 0], iv, way), label="$\hat{y}^{test}$", alpha=alpha)
     plt.legend(fontsize=25, loc=1)
     plt.ylabel("Value", fontsize=30)
     plt.xlabel("Time", fontsize=30)
@@ -103,16 +114,8 @@ class GNNTime(nn.Module):
         self.gin2 = gnn.GraphConv(hidden_dim, output_dim)
         self.tran1 = gnn.TransformerConv(input_dim, hidden_dim)
         self.tran2 = gnn.TransformerConv(hidden_dim, output_dim)
-        self.agnn1 = gnn.AGNNConv(input_dim, hidden_dim)
-        self.agnn2 = gnn.AGNNConv(hidden_dim, output_dim)
         self.tag1 = gnn.TAGConv(input_dim, hidden_dim)
         self.tag2 = gnn.TAGConv(hidden_dim, output_dim)
-        self.arma1 = gnn.ARMAConv(input_dim, hidden_dim)
-        self.arma2 = gnn.ARMAConv(hidden_dim, output_dim)
-        self.lstm1 = nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True)
-        self.lstm2 = nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True)
-        self.gru1 = nn.GRU(hidden_dim, hidden_dim, num_layers, batch_first=True)
-        self.gru2 = nn.GRU(hidden_dim, hidden_dim, num_layers, batch_first=True)
         self.cnn1 = nn.Conv2d(1, 32, kernel_size=(3, 3), padding=(1, 1))
         self.cnn2 = nn.Conv2d(32, 32, kernel_size=(3, 3), padding=(1, 1))
         self.cnn3 = nn.Conv2d(32, 32, kernel_size=(3, 3), padding=(1, 1))
@@ -120,57 +123,42 @@ class GNNTime(nn.Module):
         self.bn = nn.BatchNorm2d(32)
 
     def forward(self, x, edge_index):
-        if self.gnn_style == "gcn":             # Graph Convolution Network Model
+        if self.gnn_style == "GCN":             # Graph Convolution Network Model
             h = self.gcn1(x, edge_index, self.edge_weight)
             h = self.pre(h)
             h = self.gcn2(h, edge_index, self.edge_weight)
-        elif self.gnn_style == "che":           # Chebyshev Network
+        elif self.gnn_style == "Cheb":           # Chebyshev Network
             h = self.che1(x, edge_index)
             h = self.pre(h)
             h = self.che2(h, edge_index)
-        elif self.gnn_style == "sage":          # GraphSAGE Model
+        elif self.gnn_style == "GraphSage":          # GraphSAGE Model
             h = self.sage1(x, edge_index)
             h = self.pre(h)
             h = self.sage2(h, edge_index)
-        elif self.gnn_style == "gin":           # Graph Isomorphic Network Model
+        elif self.gnn_style == "GIN":           # Graph Isomorphic Network Model
             h = self.gin1(x, edge_index, self.edge_weight)
             h = self.pre(h)
             h = self.gin2(h, edge_index, self.edge_weight)
-        elif self.gnn_style == "tran":
+        elif self.gnn_style == "Tran":
             h = self.tran1(x, edge_index)
             h = self.pre(h)
             h = self.tran2(h, edge_index)
-        elif self.gnn_style == "agnn":
-            h = self.agnn1(x, edge_index)
-            h = self.pre(h)
-            h = self.agnn2(h, edge_index)
-        elif self.gnn_style == "tag":
+        elif self.gnn_style == "Tag":
             h = self.tag1(x, edge_index, self.edge_weight)
             h = self.pre(h)
             h = self.tag2(h, edge_index, self.edge_weight)
-        elif self.gnn_style == "arma":
-            h = self.arma1(x, edge_index, self.edge_weight)
-            h = self.pre(h)
-            h = self.arma2(h, edge_index, self.edge_weight)
-        elif (self.gnn_style == "sage_lstm") | (self.gnn_style == "sage_gru") | (self.gnn_style == "sage_res"):
+        elif self.gnn_style == "ResGraphNet":
             h = self.sage1(x, edge_index)
             h = self.pre(h)
             h = h.unsqueeze(0)
-            if self.gnn_style == "sage_lstm":
-                h, (_, _) = self.lstm1(h)
-                h, (_, _) = self.lstm2(self.pre(h))
-            elif self.gnn_style == "sage_gru":
-                h, _ = self.gru1(h)
-                h, _ = self.gru2(self.pre(h))
-            elif self.gnn_style == "sage_res":          # ResGraphNet
-                h = h.unsqueeze(0)
-                out = self.cnn1(h)
-                out_0 = out
-                out = self.cnn2(self.pre(out))
-                out = self.cnn3(self.pre(out))
-                out = out + out_0
-                out = self.cnn4(self.pre(out))
-                h = out.squeeze(0)
+            h = h.unsqueeze(0)
+            out = self.cnn1(h)
+            out_0 = out
+            out = self.cnn2(self.pre(out))
+            out = self.cnn3(self.pre(out))
+            out = out + out_0
+            out = self.cnn4(self.pre(out))
+            h = out.squeeze(0)
             h = h.squeeze(0)
             h = self.pre(h)
             h = self.sage2(h, edge_index)
@@ -336,3 +324,20 @@ class MyData(Dataset):
         x_one = self.x[idx, :]
         y_one = self.y[idx, :]
         return x_one, y_one
+
+
+# 等间隔采样
+def sam(arr, iv, way="one"):
+    num = arr.shape[0] // iv
+    arr_sam = []
+    for i in range(num):
+        if way == "one":                    # 等间隔采样
+            arr_one = arr[i * iv]
+        elif way == "mean":                 # 等间隔划分区间，取区间内的平均值
+            arr_one_range = arr[i * iv: (i + 1) * iv]
+            arr_one = np.mean(arr_one_range)
+        else:
+            raise TypeError("Unknown type of way!")
+        arr_sam.append(arr_one)
+    arr_sam = np.array(arr_sam)
+    return arr_sam
