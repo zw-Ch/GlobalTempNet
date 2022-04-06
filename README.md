@@ -13,7 +13,7 @@ Then, there are some Python packages need to be installed<br>
 
 ## Files / Folders Description
 The main program of this project is [running.py](https://github.com/czw1296924847/ResGraphNet/blob/main/running.py), so you can run the program by typing the following command<br>
-`python rnn_gnn_machine.py`<br><br>
+`python running.py`<br><br>
 The algorithm program [cal.py](https://github.com/czw1296924847/ResGraphNet/blob/main/func/cal.py) contains some custom functions required for the operation of this project.<br><br>
 The folder [dataset](https://github.com/czw1296924847/ResGraphNet/tree/main/datasets) is used to store the time series data to be predicted, and the default file format of data is .npy. Of course, you can change the data address in the 45th line in [running.py](https://github.com/czw1296924847/ResGraphNet/blob/main/running.py).<br><br>
 The folder [result](https://github.com/czw1296924847/ResGraphNet/tree/main/result) saves the prediction results of different time series data files based on different models
