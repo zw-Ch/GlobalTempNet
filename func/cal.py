@@ -7,10 +7,11 @@ import torch_geometric.nn as gnn
 import pandas as pd
 from sklearn.metrics import r2_score
 from torch.utils.data import Dataset
+from matplotlib.collections import LineCollection
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
-def eval_on_features(regress, x_train, y_train, x_test, y_test, title, iv, way, fig_size=(12, 8), alpha=0.5):
+def eval_ml(regress, x_train, y_train, x_test, y_test, title, iv, way, fig_size=(12, 8), alpha=0.5):
     num_train, num_test = x_train.shape[0], x_test.shape[0]
     num = num_train + num_test
     y_length = y_train.shape[1]
@@ -40,11 +41,11 @@ def eval_on_features(regress, x_train, y_train, x_test, y_test, title, iv, way, 
     plt.plot(lim_train, sam(y_train[:, 0], iv, way), label="$y^{train}$", alpha=alpha)
     plt.plot(lim_train, sam(y_train_pred[:, 0], iv, way), label="$\hat{y}^{train}$", alpha=alpha)
     plt.plot(lim_test, sam(y_test[:, 0], iv, way), label="$y^{test}$", alpha=alpha)
-    plt.plot(lim_test, sam(y_test_pred[:, 0], iv, way), label="$\hat{y}^{test}$", alpha=alpha)
+    plt.plot(lim_test, sam(y_train_pred[:, 0], iv, way), label="$\hat{y}^{test}$", alpha=alpha)
     plt.legend(fontsize=25, loc=1)
     plt.ylabel("Value", fontsize=30)
     plt.xlabel("Time", fontsize=30)
-    return rmse_train, rmse_test, r2_train, r2_test
+    return rmse_train, rmse_test, r2_train, r2_test, y_test[:, 0], y_train_pred[:, 0], y_test_pred[:, 0]
 
 
 def create_inout_sequences(input_data, x_length=32, y_length=4, style="list", ml_dim=0, ld1=False):
@@ -268,15 +269,16 @@ def plot_distribute(x, bins, jump, title=None, x_name=None, y_name="Frequency"):
         plt.xlabel(x_name, fontsize=30)
     if y_name is not None:
         plt.ylabel(y_name, fontsize=30)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
     return None
 
 
-# 计算真实标签与预测结果的r2分数
 def get_r2_score(output, y):
-    if (type(output) is np.ndarray) & (type(y) is np.ndarray):      # numpy数组类型
+    if (type(output) is np.ndarray) & (type(y) is np.ndarray):
         output = output.reshape(-1)
         y = y.reshape(-1)
-    elif (torch.is_tensor(output)) & (torch.is_tensor(y)):          # pytorch张量类型
+    elif (torch.is_tensor(output)) & (torch.is_tensor(y)):
         output = output.detach().cpu().numpy().reshape(-1)
         y = y.detach().cpu().numpy().reshape(-1)
     else:
@@ -326,14 +328,13 @@ class MyData(Dataset):
         return x_one, y_one
 
 
-# 等间隔采样
 def sam(arr, iv, way="one"):
     num = arr.shape[0] // iv
     arr_sam = []
     for i in range(num):
-        if way == "one":                    # 等间隔采样
+        if way == "one":
             arr_one = arr[i * iv]
-        elif way == "mean":                 # 等间隔划分区间，取区间内的平均值
+        elif way == "mean":
             arr_one_range = arr[i * iv: (i + 1) * iv]
             arr_one = np.mean(arr_one_range)
         else:
@@ -341,3 +342,77 @@ def sam(arr, iv, way="one"):
         arr_sam.append(arr_one)
     arr_sam = np.array(arr_sam)
     return arr_sam
+
+
+def plot_spiral(x, title, length=12, r=7):
+    fig, ax = plt.subplots(figsize=(14, 14))
+    x = x + 1.5
+    radius = r + 0.4
+    r_factor = r / 3.6
+
+    idx = [2, 1, 0, 11, 10, 9, 8, 7, 6, 5, 4, 3]
+    idx_str = ["Mar", "Feb", "Jan", "Dec", "Nov", "Oct", "Sep", "Aug", "Jul", "Jun", "May", "Apr"]  # 标题
+    idx_points = segment_circle(len(idx_str))
+    x_vals = []
+    y_vals = []
+    for i in range(0, len(x)):
+        r_pos = x[i] * r_factor
+        x_unit_r, y_unit_r = idx_points[idx[i % length], :2]
+        x_r, y_r = (r_pos * x_unit_r, r_pos * y_unit_r)
+        x_vals.append(x_r)
+        y_vals.append(y_r)
+    segments = [np.column_stack([x, y]) for x, y in zip(x_vals, y_vals)]
+    pts = np.array([x_vals, y_vals]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([pts[:-1], pts[1:]], axis=1)
+
+    lc = LineCollection(segments, cmap=plt.get_cmap('jet'), norm=plt.Normalize(0, 3.6))
+    lc.set_array(np.asarray(x))
+
+    fig.patch.set_facecolor('grey')
+    ax.axis('equal')
+    ax.set(xlim=(-10, 10), ylim=(-10, 10))
+    circle = plt.Circle((0, 0), r, fc='#000000')
+    ax.add_patch(circle)
+    circle_2 = plt.Circle((0, 0), r_factor * 2.5, ec='red', fc=None, fill=False, lw=3.0)
+    ax.add_patch(circle_2)
+    circle_1_5 = plt.Circle((0, 0), r_factor * 3.0, ec='red', fc=None, fill=False, lw=3.0)
+    ax.add_patch(circle_1_5)
+    props_months = {'ha': 'center', 'va': 'center', 'fontsize': 24, 'color': 'white'}
+    props_year = {'ha': 'center', 'va': 'center', 'fontsize': 36, 'color': 'white'}
+    props_temp = {'ha': 'center', 'va': 'center', 'fontsize': 32, 'color': 'red'}
+    ax.text(0, r_factor * 2.5, '1.5°C', props_temp, bbox=dict(facecolor='black'), fontsize=50)
+    ax.text(0, r_factor * 3.0, '2.0°C', props_temp, bbox=dict(facecolor='black'), fontsize=50)
+    # ax.text(0, r + 2.0, 'Global temperature change (1850-2021)\n{}'.format(title), props_year)
+
+    for j in range(0, len(idx_str)):
+        x_unit_r, y_unit_r, angle = idx_points[j]
+        x_radius, y_radius = (radius * x_unit_r, radius * y_unit_r)
+        angle = angle - 0.5 * np.pi
+        ax.text(x_radius, y_radius, idx_str[j], props_months, rotation=np.rad2deg(angle), fontsize=60)
+    plt.gca().add_collection(lc)
+    ax.autoscale()
+    ax.axis("off")
+    return None
+
+
+def segment_circle(num_segments):
+    segment_rad = 2 * np.pi / num_segments
+    segment_rads = segment_rad * np.arange(num_segments)
+    coordX = np.cos(segment_rads)
+    coordY = np.sin(segment_rads)
+    return np.c_[coordX, coordY, segment_rads]
+
+
+def plot_result(train_true, test_true, train_predict, test_predict, iv, way, fig_size):
+    plt.figure(figsize=fig_size)
+    length_train = train_true[:, 0].shape[0]
+    length_test = test_true[:, 0].shape[0]
+    lim_train = np.arange(length_train // iv)
+    lim_test = np.arange(length_train // iv, length_train // iv + length_test // iv)
+    plt.plot(lim_train, sam(train_true[:, 0], iv, way), label="$y^{train}$", alpha=0.5)
+    plt.plot(lim_train, sam(train_predict[:, 0], iv, way), label="$\hat{y}^{train}$", alpha=0.5)
+    plt.plot(lim_test, sam(test_true[:, 0], iv, way), label="$y^{test}$", alpha=0.5)
+    plt.plot(lim_test, sam(test_predict[:, 0], iv, way), label="$\hat{y}^{test}$", alpha=0.5)
+    plt.xlabel("Time", fontsize=30)
+    plt.ylabel("Value", fontsize=30)
+    plt.legend(fontsize=25)
