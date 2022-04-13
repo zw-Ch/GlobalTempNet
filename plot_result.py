@@ -1,3 +1,6 @@
+"""
+plot the result of running.py
+"""
 import matplotlib.pyplot as plt
 import numpy as np
 import func.cal as cal
