@@ -12,7 +12,7 @@ Then, there are some Python packages need to be installed<br>
 `conda install matplotlib`<br>
 
 ## Files / Folders Description
-The main program of this project is [running.py](https://github.com/czw1296924847/ResGraphNet/blob/main/running.py), so you can run the program by typing the following command<br>
+The running programs for different models is in the foloder [runn](https://github.com/czw1296924847/ResGraphNet/tree/main/run), so you can run the program by typing the following command<br>
 `python running.py`<br><br>
 You can use the spiral chart in [plot_result.py](https://github.com/czw1296924847/ResGraphNet/blob/main/plot_result.py) to draw the result of [running.py](https://github.com/czw1296924847/ResGraphNet/blob/main/running.py), and you can change the i1, i2 to choose the result data.<br><br>
 The algorithm program [cal.py](https://github.com/czw1296924847/ResGraphNet/blob/main/func/cal.py) contains some custom functions required for the operation of this project.<br><br>
