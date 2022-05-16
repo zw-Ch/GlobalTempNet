@@ -125,8 +125,8 @@ class GNNTime(nn.Module):
         self.drop = nn.Dropout()
         self.gcn1 = gnn.GCNConv(input_dim, hidden_dim)
         self.gcn2 = gnn.GCNConv(hidden_dim, output_dim)
-        self.che1 = gnn.ChebConv(input_dim, hidden_dim, K=2)
-        self.che2 = gnn.ChebConv(hidden_dim, output_dim, K=2)
+        self.che1 = gnn.ChebConv(input_dim, hidden_dim, K=3)
+        self.che2 = gnn.ChebConv(hidden_dim, output_dim, K=3)
         self.sage1 = gnn.SAGEConv(input_dim, hidden_dim)
         self.sage2 = gnn.SAGEConv(hidden_dim, output_dim)
         self.gin1 = gnn.GraphConv(input_dim, hidden_dim)
@@ -135,61 +135,68 @@ class GNNTime(nn.Module):
         self.tran2 = gnn.TransformerConv(hidden_dim, output_dim)
         self.tag1 = gnn.TAGConv(input_dim, hidden_dim)
         self.tag2 = gnn.TAGConv(hidden_dim, output_dim)
+        self.gat1 = gnn.GATConv(input_dim, hidden_dim)
+        self.gat2 = gnn.GATConv(hidden_dim, output_dim)
         self.cnn1 = nn.Conv2d(1, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
         self.cnn2 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
         self.cnn3 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
         self.cnn4 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
         self.cnn5 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
-        self.cnn6 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
-        self.cnn7 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
         self.cnn8 = nn.Conv2d(hidden_dim, 1, kernel_size=(5, 5), padding=(2, 2))
         self.bn = nn.BatchNorm2d(hidden_dim)
+        self.linear1 = nn.Linear(output_dim, hidden_dim)
+        self.linear2 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x, edge_index):
         if self.gnn_style == "GCN":             # Graph Convolution Network Model
             h = self.gcn1(x, edge_index, self.edge_weight)
-            h = self.pre(h)
+            h = self.drop(h)
             h = self.gcn2(h, edge_index, self.edge_weight)
         elif self.gnn_style == "Cheb":           # Chebyshev Network
             h = self.che1(x, edge_index)
-            h = self.pre(h)
+            h = self.drop(h)
             h = self.che2(h, edge_index)
         elif self.gnn_style == "GraphSage":          # GraphSAGE Model
             h = self.sage1(x, edge_index)
-            h = self.pre(h)
+            h = self.drop(h)
             h = self.sage2(h, edge_index)
         elif self.gnn_style == "GIN":           # Graph Isomorphic Network Model
             h = self.gin1(x, edge_index, self.edge_weight)
-            h = self.pre(h)
+            h = self.drop(h)
             h = self.gin2(h, edge_index, self.edge_weight)
         elif self.gnn_style == "UniMP":
             h = self.tran1(x, edge_index)
-            h = self.pre(h)
+            h = self.drop(h)
             h = self.tran2(h, edge_index)
         elif self.gnn_style == "TAGCN":
             h = self.tag1(x, edge_index, self.edge_weight)
-            h = self.pre(h)
+            h = self.drop(h)
             h = self.tag2(h, edge_index, self.edge_weight)
+        elif self.gnn_style == "GAT":
+            h = self.gat1(x, edge_index)
+            h = self.drop(h)
+            h = self.gat2(h, edge_index)
         elif self.gnn_style == "ResGraphNet":
             h = self.sage1(x, edge_index)
-            h = self.pre(h)
             h = h.unsqueeze(0).unsqueeze(0)
             out = self.cnn1(h)
 
             out_0 = out
-            out = self.cnn2(self.pre(out))
-            out = self.cnn3(self.pre(out))
+            out = self.cnn2(self.drop(out))
+            out = self.cnn3(self.drop(out))
             out = out + out_0
 
             out_1 = out
-            out = self.cnn4(self.pre(out))
-            out = self.cnn5(self.pre(out))
+            out = self.cnn4(self.drop(out))
+            out = self.cnn5(self.drop(out))
             out = out + out_1
 
             out = self.cnn8(self.drop(out))
             h = out.squeeze(0).squeeze(0)
 
             h = self.sage2(h, edge_index)
+            h = self.linear1(h)
+            h = self.linear2(h)
         else:
             raise TypeError("{} is unknown for gnn style".format(self.gnn_style))
         return h
@@ -199,6 +206,14 @@ def path_graph(m):
     adm = np.zeros(shape=(m, m))
     for i in range(m - 1):
         adm[i, i + 1] = 1
+    return adm
+
+
+def cyclic_graph(m):
+    adm = np.zeros(shape=(m, m))
+    for i in range(m - 1):
+        adm[i, i + 1] = 1
+    adm[m - 1, 0] = 1
     return adm
 
 
@@ -360,12 +375,12 @@ class RESModel(nn.Module):
         h = self.lin_pre(h)
         h = self.cnn1(h)
         h_0 = h
-        h = self.cnn2(self.pre(h))
-        h = self.cnn3(self.pre(h))
+        h = self.cnn2(self.drop(h))
+        h = self.cnn3(self.drop(h))
         h = h + h_0
         h_1 = h
-        h = self.cnn4(self.pre(h))
-        h = self.cnn5(self.pre(h))
+        h = self.cnn4(self.drop(h))
+        h = self.cnn5(self.drop(h))
         h = h + h_1
         h = self.cnn6(h)
         h = self.last1(h).squeeze(3).squeeze(1)
