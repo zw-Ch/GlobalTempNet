@@ -1,0 +1,2 @@
+rnn_style r2_test r2_train run_time l_x l_y hidden_dim lr epochs
+GRU -1.8492163282668166 -0.143075786560396 0:01:04.782961 60 1 64 0.0001 200 
