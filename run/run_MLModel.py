@@ -19,18 +19,17 @@ import func.cal as cal
 
 l_x = 60                   # Data sequence length
 l_y = 1                    # Label sequence length
-hidden_dim = 64
 ml_style_all = ["forest", "linear", "svr", "sgd"]
 ml_style = "linear"
-save_fig = False                  # Whether to save picture
+save_fig = True                  # Whether to save picture
 save_txt = True                  # Whether to save txt
-save_np = False                  # Whether to save np file
-save_model = False               # Whether to save network model
+save_np = True                  # Whether to save np file
+save_model = True               # Whether to save network model
 ratio_train = 0.5               # Proportion of training datasets
 fig_size = (16, 12)
-ts_name_all = ["HadCRUT", "climate", "electricity", "sales", "solar", "pm25", "traffic", "temperature"]
-ts_name_folder = "sales"    # Name of the folder where the data resides
-ts_name = "sales_sam"       # Name of the selected time series
+ts_name_all = ["cli_dash", "HadCRUT5", "temp_month", "temp_year", "elect", "sales"]
+ts_name_folder = "cli_dash"    # Name of the folder where the data resides
+ts_name = "ERA5_European"       # Name of the selected time series
 iv = 1                          # sampling interval, used for plotting curves
 way = "mean"                    # The style of plot curves of real data and predict results
 

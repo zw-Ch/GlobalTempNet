@@ -10,33 +10,34 @@ import os.path as osp
 import matplotlib.pyplot as plt
 import datetime
 from torch.utils.data import DataLoader
+from sklearn.preprocessing import StandardScaler
 
 import sys
 sys.path.append("..")
 import func.cal as cal
 
 
-# device = "cuda:1" if torch.cuda.is_available() else "cpu"
-device = "cpu"
+device = "cuda:1" if torch.cuda.is_available() else "cpu"
+# device = "cpu"
 l_x = 60                   # Data sequence length
 l_y = 1                    # Label sequence length
 lr = 0.0001                  # Learning rate
 num_layers = 1
 weight_decay = 5e-4
-epochs = 400
+epochs = 200
 hidden_dim = 64
 batch_size = 32
-rnn_style_all = ["LSMT", "GRU"]
+rnn_style_all = ["LSTM", "GRU"]
 rnn_style = "GRU"
-save_fig = False                  # Whether to save picture
+save_fig = True                  # Whether to save picture
 save_txt = True                  # Whether to save txt
-save_np = False                  # Whether to save np file
-save_model = False               # Whether to save network model
+save_np = True                  # Whether to save np file
+save_model = True               # Whether to save network model
 ratio_train = 0.5               # Proportion of training datasets
 fig_size = (16, 12)
-ts_name_all = ["HadCRUT", "climate", "electricity", "sales", "solar", "pm25", "traffic", "temperature"]
-ts_name_folder = "sales"    # Name of the folder where the data resides
-ts_name = "sales_sam"       # Name of the selected time series
+ts_name_all = ["cli_dash", "HadCRUT5", "temp_month", "temp_year", "elect", "sales", "traffic"]
+ts_name_folder = "cli_dash"    # Name of the folder where the data resides
+ts_name = "ERA5_European"       # Name of the selected time series
 iv = 1                          # sampling interval, used for plotting curves
 way = "mean"                    # The style of plot curves of real data and predict results
 
@@ -50,6 +51,11 @@ if not(osp.exists(result_address)):
 
 num_train = int(ratio_train * num)
 data_train, data_test = x[:num_train], x[num_train:num]     # get training dataset and test dataset
+
+sta = StandardScaler()
+sta.fit(data_train.reshape(-1, 1))
+data_train = sta.transform(data_train.reshape(-1, 1)).reshape(-1)
+data_test = sta.transform(data_test.reshape(-1, 1)).reshape(-1)
 
 # Using RESModel to predict time series
 start_time = datetime.datetime.now()
