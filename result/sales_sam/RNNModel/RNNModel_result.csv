@@ -1,2 +1,0 @@
-,rnn_style,r2_test,r2_train,run_time,l_x,l_y,hidden_dim,lr,epochs
-0,GRU,-10.969528717762419,-41.27542871323487,0:51:14.249235,60,1,64,0.0001,400

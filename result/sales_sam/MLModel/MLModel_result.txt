@@ -1,2 +1,0 @@
-ml_style r2_test r2_train run_time l_x l_y
-linear 0.6464752031543594 0.5660806515024828 0:00:00.545123 60 1 
