@@ -1,0 +1,2 @@
+,gnn_style,r2_test,r2_train,run_time,l_x,l_y,hidden_dim,lr,epochs
+0,ResGraphNet,0.9816879438032089,0.9977088043036417,0:02:17.094973,60,1,64,0.0001,4000

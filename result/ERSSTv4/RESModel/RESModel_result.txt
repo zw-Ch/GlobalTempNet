@@ -1,0 +1,2 @@
+r2_test r2_train run_time l_x l_y hidden_dim lr epochs
+0.7570616128673724 0.45073701065467875 0:04:01.749796 60 1 64 0.0001 200 
