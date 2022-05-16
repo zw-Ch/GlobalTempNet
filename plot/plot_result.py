@@ -31,15 +31,15 @@ def select_result(model, ts_name, data_style, style=None):
     return x, x_name
 
 data_style = "test"             # Select training set ("train") or test set ("test")
-ts_name = "HadCRUT2"            # Select time series already processed
+ts_name = "ERSSTv3b"            # Select time series already processed
 
 model_all = ["ResGraphNet", "RESModel", "GNNModel", "RNNModel", "MLModel"]
-model = "RNNModel"               # Select Model Style
+model = "MLModel"               # Select Model Style
 
-gnn_style_all = ["GraphSage", "GCN", "Cheb", "GIN", "UniMP", "TAGCN"]
+gnn_style_all = ["GraphSage", "GCN", "GIN", "UniMP"]
 rnn_style_all = ["LSTM", "GRU"]
 ml_style_all = ["forest", "linear", "svr", "sgd"]
-style = "GRU"                   # Select Model Style Further
+style = "sgd"                   # Select Model Style Further
 
 graph_address = osp.join("../graph", ts_name)       # the address of saving figures
 if not(osp.exists(graph_address)):
