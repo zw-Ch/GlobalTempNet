@@ -10,6 +10,7 @@ Then, there are some Python packages need to be installed<br>
 `conda install pytorch torchvision torchaudio cudatoolkit=11.3`<br>
 `conda install pyg -c pyg`<br>
 `conda install matplotlib`<br>
+`conda install statsmodels`<br>
 
 ## Runing Programs
 The running programs based on different models is in [run](https://github.com/czw1296924847/ResGraphNet/tree/main/run),  and you can type the following command to train these models:<br>
