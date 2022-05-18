@@ -12,12 +12,12 @@ Then, there are some Python packages need to be installed<br>
 `conda install matplotlib`<br>
 `conda install statsmodels`<br>
 
-## Runing Programs
+## Training and Testing Models
 The running programs based on different models is in [run](https://github.com/czw1296924847/ResGraphNet/tree/main/run),  and you can type the following command to train these models:<br>
 ResGraphNet: `python run_ResGraphNet.py`<br>
 RES Model: `python run_RESModel.py`<br>
 GNN Model: `python run_GNNModel.py`<br>
 RNN Model: `python run_RNNModel.py `<br>
 
-## Plotting Programs
+## Plotting Figures
 The programs in [plot](https://github.com/czw1296924847/ResGraphNet/tree/main/plot) are used to plot some figures.<br>
