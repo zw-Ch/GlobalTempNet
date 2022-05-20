@@ -114,11 +114,12 @@ def index_to_mask(index, size):
 
 
 class GNNTime(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, edge_weight, gnn_style):
+    def __init__(self, input_dim, hidden_dim, output_dim, edge_weight, gnn_style, num_nodes):
         super(GNNTime, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
+        self.num_nodes = num_nodes
         self.edge_weight = nn.Parameter(edge_weight)
         self.gnn_style = gnn_style
         self.pre = nn.Sequential(nn.ReLU(), nn.Dropout())
@@ -142,7 +143,7 @@ class GNNTime(nn.Module):
         self.cnn3 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
         self.cnn4 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
         self.cnn5 = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=(5, 5), padding=(2, 2))
-        self.cnn8 = nn.Conv2d(hidden_dim, 1, kernel_size=(5, 5), padding=(2, 2))
+        self.cnn6 = nn.Conv2d(hidden_dim, 1, kernel_size=(5, 5), padding=(2, 2))
         self.bn = nn.BatchNorm2d(hidden_dim)
         self.linear1 = nn.Linear(output_dim, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, output_dim)
@@ -191,12 +192,10 @@ class GNNTime(nn.Module):
             out = self.cnn5(self.drop(out))
             out = out + out_1
 
-            out = self.cnn8(self.drop(out))
+            out = self.cnn6(self.drop(out))
             h = out.squeeze(0).squeeze(0)
 
             h = self.sage2(h, edge_index)
-            h = self.linear1(h)
-            h = self.linear2(h)
         else:
             raise TypeError("{} is unknown for gnn style".format(self.gnn_style))
         return h
@@ -214,6 +213,26 @@ def cyclic_graph(m):
     for i in range(m - 1):
         adm[i, i + 1] = 1
     adm[m - 1, 0] = 1
+    return adm
+
+
+def ts_un(n, k):
+    adm = np.zeros(shape=(n, n))
+    if k < 1:
+        raise ValueError("k must be greater than or equal to 1")
+    else:
+        for i in range(n):
+            if i < (n - k):
+                for k_one in range(1, k + 1):
+                    adm[i, i + k_one] = 1.
+            else:
+                for k_one in range(1, k + 1):
+                    if (k_one + i) >= n:
+                        mod = (k_one + i) % n
+                        adm[i, mod] = 1.
+                    else:
+                        adm[i, i + k_one] = 1.
+    adm = (adm + adm.T) / 2
     return adm
 
 
