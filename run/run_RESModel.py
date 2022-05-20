@@ -24,14 +24,14 @@ epochs = 200
 hidden_dim = 64
 batch_size = 32
 save_fig = True                  # Whether to save picture
-save_txt = True                  # Whether to save txt
+save_txt = False                  # Whether to save txt
 save_np = True                  # Whether to save np file
 save_model = True               # Whether to save network model
 ratio_train = 0.5               # Proportion of training datasets
 fig_size = (16, 12)
-ts_name_all = ["temp_month", "temp_year"]
-ts_name_folder = "temp_month"    # Name of the folder where the data resides
-ts_name = "ERSSTv4"       # Name of the selected time series
+ts_name_all = ["HadCRUT5", "temp_month", "temp_year"]
+ts_name_folder = "HadCRUT5"    # Name of the folder where the data resides
+ts_name = "HadCRUT5_global"       # Name of the selected time series
 iv = 1                          # sampling interval, used for plotting curves
 way = "mean"                    # The style of plot curves of real data and predict results
 
@@ -73,8 +73,8 @@ for epoch in range(epochs):
         optimizer.step()
         loss_train_all = loss_train_all + loss_train.item()
 
-        train_predict_one = output_train.detach().cpu().numpy()
-        train_true_one = y_train.detach().cpu().numpy()
+        train_predict_one = output_train.detach().cpu().numpy()[:, -1]
+        train_true_one = y_train.detach().cpu().numpy()[:, -1]
         if idx == 0:
             train_true = train_true_one
             train_predict = train_predict_one
@@ -88,8 +88,8 @@ for epoch in range(epochs):
         loss_test = criterion(output_test, y_test)
         loss_test_all = loss_test_all + loss_test.item()
 
-        test_predict_one = output_test.detach().cpu().numpy()
-        test_true_one = y_test.detach().cpu().numpy()
+        test_predict_one = output_test.detach().cpu().numpy()[:, -1]
+        test_true_one = y_test.detach().cpu().numpy()[:, -1]
         if idx == 0:
             test_true = test_true_one
             test_predict = test_predict_one
@@ -97,10 +97,6 @@ for epoch in range(epochs):
             test_true = np.concatenate((test_true, test_true_one), axis=0)
             test_predict = np.concatenate((test_predict, test_predict_one), axis=0)
 
-    train_true = train_true[:, 0]
-    train_predict = train_predict[:, 0]
-    test_true = test_true[:, 0]
-    test_predict = test_predict[:, 0]
     r2_train = cal.get_r2_score(train_predict, train_true, axis=1)
     r2_test = cal.get_r2_score(test_predict, test_true, axis=1)
     print("Epoch: {:04d}  Loss_Train: {:.7f}  Loss_Test: {:.7f}  R2_Train: {:.7f}  R2_Test: {:.7f}".
@@ -118,6 +114,8 @@ cal.plot_result(train_true, test_true, train_predict, test_predict, iv, way, fig
 if save_fig:
     plt.savefig(osp.join(result_address, ts_name + "_RESModel.png"))
 
+if save_model:
+    torch.save(model, osp.join(result_address, "RESModel.pkl"))
 if save_np:
     np.save(osp.join(result_address, "train_true.npy"), train_true)
     np.save(osp.join(result_address, "test_true.npy"), test_true)

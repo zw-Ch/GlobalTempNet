@@ -23,8 +23,8 @@ save_model = True               # Whether to save network model
 ratio_train = 0.5               # Proportion of training datasets
 fig_size = (16, 12)
 ts_name_all = ["cli_dash", "HadCRUT5", "temp_month", "elect", "traffic", "sales"]
-ts_name_folder = "sales"    # Name of the folder where the data resides
-ts_name = "sales"       # Name of the selected time series
+ts_name_folder = "temp_month"    # Name of the folder where the data resides
+ts_name = "ERSSTv3b"       # Name of the selected time series
 iv = 1                          # sampling interval, used for plotting curves
 way = "mean"                    # The style of plot curves of real data and predict results
 

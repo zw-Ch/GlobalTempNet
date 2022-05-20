@@ -35,9 +35,9 @@ save_np = True                  # Whether to save np file
 save_model = True               # Whether to save network model
 ratio_train = 0.5               # Proportion of training datasets
 fig_size = (16, 12)
-ts_name_all = ["cli_dash", "HadCRUT5", "temp_month", "temp_year", "elect", "sales", "traffic"]
-ts_name_folder = "cli_dash"    # Name of the folder where the data resides
-ts_name = "ERA5_European"       # Name of the selected time series
+ts_name_all = ["HadCRUT5", "cli_dash", "HadCRUT5", "temp_month", "temp_year", "elect", "sales", "traffic"]
+ts_name_folder = "HadCRUT5"    # Name of the folder where the data resides
+ts_name = "HadCRUT5_global"       # Name of the selected time series
 iv = 1                          # sampling interval, used for plotting curves
 way = "mean"                    # The style of plot curves of real data and predict results
 
@@ -51,11 +51,6 @@ if not(osp.exists(result_address)):
 
 num_train = int(ratio_train * num)
 data_train, data_test = x[:num_train], x[num_train:num]     # get training dataset and test dataset
-
-sta = StandardScaler()
-sta.fit(data_train.reshape(-1, 1))
-data_train = sta.transform(data_train.reshape(-1, 1)).reshape(-1)
-data_test = sta.transform(data_test.reshape(-1, 1)).reshape(-1)
 
 # Using RESModel to predict time series
 start_time = datetime.datetime.now()

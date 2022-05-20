@@ -15,7 +15,7 @@ sys.path.append("..")
 import func.cal as cal
 
 
-device = "cuda:1" if torch.cuda.is_available() else "cpu"
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
 l_x = 60                   # Data sequence length
 l_y = 1                    # Label sequence length
@@ -26,14 +26,14 @@ hidden_dim = 64
 gnn_style_all = ["GraphSage", "GCN", "Cheb", "GIN", "UniMP", "TAGCN", "GAT"]
 gnn_style = "GraphSage"
 save_fig = True                  # Whether to save picture
-save_txt = True                  # Whether to save txt
+save_txt = False                  # Whether to save txt
 save_np = True                  # Whether to save np file
 save_model = True               # Whether to save network model
 ratio_train = 0.5               # Proportion of training datasets
 fig_size = (16, 12)
 ts_name_all = ["cli_dash", "HadCRUT5", "temp_month", "temp_year", "elect", "sales"]
-ts_name_folder = "cli_dash"    # Name of the folder where the data resides
-ts_name = "ERA5_European"       # Name of the selected time series
+ts_name_folder = "HadCRUT5"    # Name of the folder where the data resides
+ts_name = "HadCRUT5_global"       # Name of the selected time series
 iv = 1                          # sampling interval, used for plotting curves
 way = "mean"                    # The style of plot curves of real data and predict results
 
@@ -70,7 +70,7 @@ train_mask = cal.index_to_mask(train_index, num_nodes).to(device)
 test_mask = cal.index_to_mask(test_index, num_nodes).to(device)
 
 # Using GNN Model, predicting time series
-model = cal.GNNTime(l_x, hidden_dim, l_y, edge_weight, gnn_style).to(device)
+model = cal.GNNTime(l_x, hidden_dim, l_y, edge_weight, gnn_style, num_nodes).to(device)
 criterion = torch.nn.MSELoss().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 edge_index = edge_index.to(device)
@@ -82,18 +82,18 @@ for epoch in range(epochs):
     optimizer.zero_grad()
     output = model(x, edge_index)
     output_train, y_train = output[train_mask], y[train_mask]
-    train_loss = criterion(output_train, y_train)
+    train_loss = criterion(output_train[:, -1], y_train[:, -1])
     train_loss.backward()
     optimizer.step()
 
     model.eval()
     output_test, y_test = output[test_mask], y[test_mask]
-    test_loss = criterion(output_test, y_test)
+    test_loss = criterion(output_test[:, -1], y_test[:, -1])
 
-    train_true = y_train.detach().cpu().numpy()[:, 0]
-    train_predict = output_train.detach().cpu().numpy()[:, 0]
-    test_true = y_test.detach().cpu().numpy()[:, 0]
-    test_predict = output_test.detach().cpu().numpy()[:, 0]
+    train_true = y_train.detach().cpu().numpy()[:, -1]
+    train_predict = output_train.detach().cpu().numpy()[:, -1]
+    test_true = y_test.detach().cpu().numpy()[:, -1]
+    test_predict = output_test.detach().cpu().numpy()[:, -1]
 
     r2_train = cal.get_r2_score(train_predict, train_true, axis=1)
     r2_test = cal.get_r2_score(test_predict, test_true, axis=1)
