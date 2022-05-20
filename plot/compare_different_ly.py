@@ -30,9 +30,9 @@ save_fig = True                  # Whether Save picture
 save_np = True
 ratio_train = 0.5               # Proportion of training datasets
 fig_size = (12, 10)
-ts_name_all = ["temp_month", "temp_year"]
-ts_name_folder = "temp_month"    # Name of the folder where the data resides
-ts_name = "ERSSTv3b"       # Name of the selected time series
+ts_name_all = ["HadCRUT5", "temp_month", "temp_year"]
+ts_name_folder = "HadCRUT5"    # Name of the folder where the data resides
+ts_name = "HadCRUT5_global"       # Name of the selected time series
 iv = 1                          # sampling interval, used for plotting curves
 way = "mean"                    # The style of plot curves of real data and predict results
 
@@ -62,10 +62,14 @@ x_label = x_tick + 1
 for i in range(ly_all.shape[0]):
     l_y = ly_all[i]
 
+    len_interp = l_y + 5
+    data_test_ = np.array(
+        data_test[:-l_y].tolist() + data_test[-len_interp - l_y:-l_y].tolist() + data_test[-l_y:].tolist())
+
     # Using Graph Neural network, prepare data information
     print("\nly={}: Running, ResGraphNet".format(l_y))
     x_train, y_train = cal.create_inout_sequences(data_train, l_x, l_y, style="arr")
-    x_test, y_test = cal.create_inout_sequences(data_test, l_x, l_y, style="arr")
+    x_test, y_test = cal.create_inout_sequences(data_test_, l_x, l_y, style="arr")
 
     x_train = torch.from_numpy(x_train).float().to(device)
     x_test = torch.from_numpy(x_test).float().to(device)
@@ -87,7 +91,7 @@ for i in range(ly_all.shape[0]):
     """
     Using ResGraphNet, predicting time series (The Proposed Network Model)
     """
-    model = cal.GNNTime(l_x, hidden_dim, l_y, edge_weight, gnn_style).to(device)
+    model = cal.GNNTime(l_x, hidden_dim, l_y, edge_weight, gnn_style, num_nodes).to(device)
     criterion = torch.nn.MSELoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr_gnn, weight_decay=weight_decay)
     edge_index = edge_index.to(device)
@@ -98,25 +102,25 @@ for i in range(ly_all.shape[0]):
         optimizer.zero_grad()
         output = model(x, edge_index)
         output_train, y_train = output[train_mask], y[train_mask]
-        train_loss = criterion(output_train[:, -l_y:], y_train[:, -l_y:])
+        train_loss = criterion(output_train[:, -1], y_train[:, -1])
         train_loss.backward()
         optimizer.step()
 
         model.eval()
-        output_test, y_test = output[test_mask], y[test_mask]
-        test_loss = criterion(output_test[:, -l_y:], y_test[:, -l_y:])
+        output_test, y_test = output[test_mask][:-len_interp], y[test_mask][:-len_interp]
+        test_loss = criterion(output_test[:, -1], y_test[:, -1])
 
-        r2_train = cal.get_r2_score(output_train, y_train, axis=1)
-        r2_test = cal.get_r2_score(output_test, y_test, axis=1)
+        train_true = y_train.detach().cpu().numpy()[:, -1]
+        train_predict = output_train.detach().cpu().numpy()[:, -1]
+        test_true = y_test.detach().cpu().numpy()[:, -1]
+        test_predict = output_test.detach().cpu().numpy()[:, -1]
+
+        r2_train = cal.get_r2_score(train_predict, train_true, axis=1)
+        r2_test = cal.get_r2_score(test_predict, test_true, axis=1)
 
         if (epoch + 1) % 100 == 0:
             print("Epoch: {:05d}  Loss_Train: {:.5f}  Loss_Test: {:.5f}  R2_Train: {:.7f}  R2_Test: {:.7f}".
                   format(epoch + 1, train_loss.item(), test_loss.item(), r2_train, r2_test))
-
-    train_true = y_train.detach().cpu().numpy()[:, -1]
-    train_predict = output_train.detach().cpu().numpy()[:, -1]
-    test_true = y_test.detach().cpu().numpy()[:, -1]
-    test_predict = output_test.detach().cpu().numpy()[:, -1]
 
     r2_train = cal.get_r2_score(train_predict, train_true, axis=1)
     r2_test = cal.get_r2_score(test_predict, test_true, axis=1)
