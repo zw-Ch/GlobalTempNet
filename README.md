@@ -13,8 +13,8 @@ Then, there are some Python packages need to be installed<br>
 `conda install statsmodels`<br>
 
 ## Training and Testing Models
-The running programs based on different models is in [run](https://github.com/czw1296924847/GlobalTempNet/tree/main/run),  and you can type the following command to train the model:<br>
-GlobalTempNet: `python run_ResGraphNet.py`<br>
+The running programs based on different models is in [run](https://github.com/czw1296924847/GlobalTempNet/run),  and you can type the following command to train the model:<br>
+GlobalTempNet: `python run_GlobalTempNet.py`<br>
 
 
 <!---
