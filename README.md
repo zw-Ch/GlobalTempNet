@@ -10,7 +10,9 @@ Then, there are some Python packages need to be installed<br>
 `conda install pytorch torchvision torchaudio cudatoolkit=11.3`<br>
 `conda install pyg -c pyg`<br>
 `conda install matplotlib`<br>
+<!---
 `conda install statsmodels`<br>
+-->
 
 ## Training and Testing Models
 The running programs based on different models is in [run](https://github.com/czw1296924847/GlobalTempNet/run),  and you can type the following command to train the model:<br>
