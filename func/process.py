@@ -352,42 +352,6 @@ def xy_vals(x, month_idx, month_points):
     return x_vals, y_vals, r_max, r_min
 
 
-def train_ml(x_train, y_train, x_test, y_test, ml):
-    l_x, l_y = x_train.shape[1], y_train.shape[1]
-    m_train, m_test, r = x_train.shape[0], x_test.shape[0], l_x // l_y
-
-    x_train_, y_train_, x_test_, y_test_ = [], [], [], []
-    for i in range(m_train):
-        x_train_one, y_train_one_ = x_train[i, :], y_train[i, :].reshape(-1, 1)
-        x_train_one_ = []
-        for k in range(l_y):
-            x_train_one_one = x_train_one[k * r: (k + 1) * r]
-            x_train_one_.append(x_train_one_one)
-        x_train_one_ = np.array(x_train_one_)
-        if i == 0:
-            x_train_, y_train_ = x_train_one_, y_train_one_
-        else:
-            x_train_, y_train_ = np.vstack([x_train_, x_train_one_]), np.vstack([y_train_, y_train_one_])
-    for i in range(m_test):
-        x_test_one, y_test_one_ = x_test[i, :], y_test[i, :].reshape(-1, 1)
-        x_test_one_ = []
-        for k in range(l_y):
-            x_test_one_one = x_test_one[k * r: (k + 1) * r]
-            x_test_one_.append(x_test_one_one)
-        x_test_one_ = np.array(x_test_one_)
-        if i == 0:
-            x_test_, y_test_ = x_test_one_, y_test_one_
-        else:
-            x_test_, y_test_ = np.vstack([x_test_, x_test_one_]), np.vstack([y_test_, y_test_one_])
-
-    ml.fit(x_train_, y_train_.reshape(-1))
-    train_predict = ml.predict(x_train_).reshape(y_train.shape)
-    test_predict = ml.predict(x_test_).reshape(y_test.shape)
-    train_true = y_train_.reshape(y_train.shape)
-    test_true = y_test_.reshape(y_test.shape)
-    return train_true, train_predict, test_true, test_predict, ml
-
-
 def cal_dist(x, bins):
     x_label, x_bins = pd.cut(x, bins=bins, retbins=True)
     x_label = pd.DataFrame(x_label)
@@ -451,16 +415,5 @@ def plot_dist(x, bins, jump, pos, title, fig_si, fo_si, fo_ti_si, fo_te, x_name,
         plt.xlabel(x_name, fontsize=fo_si, labelpad=20)
     if y_name is not None:
         plt.ylabel(y_name, fontsize=fo_si, labelpad=20)
-
-    # # fit curve
-    # x_plot = np.linspace(left, right, 1000)
-    # kde = KernelDensity(kernel='gaussian', bandwidth=0.75).fit(x.reshape(-1, 1))
-    # log_density = kde.score_samples(x_plot.reshape(-1, 1))
-    # y_plot = np.exp(log_density)
-    # r_y = np.max(interval_sum_sort) / np.max(y_plot)
-    # x_t = np.linspace(0, bins, 1000)
-    # ax.plot(x_t, y_plot * r_y, lw=5, label="Kernel density", c='blue', zorder=2)
-    # ax.legend(fontsize=fo_si)
-
     return fig
 
