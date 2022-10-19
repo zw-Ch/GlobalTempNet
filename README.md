@@ -1,4 +1,5 @@
 # GlobalTempNet
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7224745.svg)](https://doi.org/10.5281/zenodo.7224745)<br>
 GlobalTempNet is a deep neural network used to predict time series. It effectively combines Graph neural network (GNN) with ResNet modules and LSTM layers, so it has a stronger performance than traditional time series prediction methods.<br>
 The paper is available in <br>
 
