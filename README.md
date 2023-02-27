@@ -8,7 +8,7 @@ GlobalTempNet is based on [Pytorch](https://pytorch.org/docs/stable/index.html) 
 Firstly please create a virtual environment for yourself<br>
 `conda create -n your-env-name python=3.9`<br><br>
 Then, there are some Python packages need to be installed<br>
-`conda install pytorch torchvision torchaudio cudatoolkit=11.3`<br>
+`conda install pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 cudatoolkit=11.3`<br>
 `conda install pyg -c pyg`<br>
 `conda install matplotlib`<br>
 <!---
